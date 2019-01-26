@@ -1,0 +1,344 @@
+<div itemscope itemtype="http://schema.org/Product">
+  <div class="page-title row">
+  {% if product.description %}<meta itemprop="description" content="{{ product.description }}" />{% endif %}
+  <div class="col-sm-6 col-md-6">
+    <h1 class="product-page" itemprop="name" content="{{ product.fulltitle|split(':')[0] }}"> {{ product.fulltitle|split(':')[0]}}</h1>
+  </div>
+  <div class="col-sm-6 col-md-6 breadcrumbs text-right">
+    <a href="{{ '' | url }}" title="{{ 'Home' | t }}">{{ 'Home' | t }}</a>
+    
+    {% for breadcrumb in page.breadcrumbs %}
+    / <a href="{{ breadcrumb.url | url }}">{{ breadcrumb.title|split(':')[0] }}</a>
+    {% endfor %}
+  </div>  
+</div>
+<div class="product-wrap row">
+  <div class="product-img col-sm-6 col-md-6 col-lg-5">
+    <div class="zoombox">
+      <div class="images"> 
+        {% if product.image %}<meta itemprop="image" content="{{ product.image | url_image('300x250x2', product.fulltitle) }}" />{% endif %}
+        {# Check for second image to see if there's more than one #}
+        {% if product.images.1 %}
+          {% for image in product.images %}
+          <a class="gallery zoom{% if loop.first %} first{% endif %}" data-image-id="{{ image }}" href="{{ image | url_image('800px1024x2', product.fulltitle) }}">             
+            {% if product.images.0 %}
+              {% if theme.product_image_fit %}
+              <img src="{{ image | url_image('', product.fulltitle) }}" alt="{{ product.fulltitle }}">
+              {% else %}
+              <img src="{{ image | url_image('800px1024x2', product.fulltitle) }}" alt="{{ product.fulltitle }}">
+              {% endif %}
+            {% else %}
+            <img src="{{ 'pro-icon.png' | url_asset }}" alt="{{ product.fulltitle }}">
+            {% endif %}
+          </a> 
+          {% endfor %}
+        {% else %}
+         {% for image in product.images %}
+          <a class="zoom first" data-image-id="{{ image }}" href="{{ image | url_image('800px1024x2', product.fulltitle) }}" data-featherlight="image">             
+            {% if product.images.0 %}
+              {% if theme.product_image_fit %}
+              <img src="{{ image | url_image('', product.fulltitle) }}" alt="{{ product.fulltitle }}">
+              {% else %}
+              <img src="{{ image | url_image('800px1024x2', product.fulltitle) }}" alt="{{ product.fulltitle }}">
+              {% endif %}
+            {% else %}
+            <img src="{{ 'pro-icon.png' | url_asset }}" alt="{{ product.fulltitle }}">
+            {% endif %}
+          </a> 
+          {% endfor %}
+        {% endif %}
+      </div>
+      
+      <div class="thumbs row">
+        {% if product.images.1 %}
+          {% for image in product.images %}
+          <div class="col-xs-3">
+            <a data-image-id="{{ image }}">
+              {% if product.images.0 %}
+                {% if theme.product_image_fit %}
+                <img src="{{ image | url_image('300x200x1', product.fulltitle) }}" alt="{{ product.fulltitle }}" title="{{ product.fulltitle }}"/>
+                {% else %}
+                <img src="{{ image | url_image('300x200x2', product.fulltitle) }}" alt="{{ product.fulltitle }}" title="{{ product.fulltitle }}"/>
+                {% endif %}
+              {% else %}
+              <img src="{{ 'pro-icon.png' | url_asset }}" alt="{{ product.fulltitle }}">
+              {% endif %}
+            </a>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>  
+    </div>
+  </div>
+ 
+  <div itemprop="offers" itemscope itemtype="http://schema.org/Offer" class="product-info col-sm-6 col-lg-offset-1"> 
+    <meta itemprop="price" content="{{ product.price.price | number_format(2, '.', '') }}" />
+    <meta itemprop="priceCurrency" content="{{ shop.currency | upper }}" /> 
+    <meta itemprop="itemCondition" itemtype="http://schema.org/OfferItemCondition" content="http://schema.org/NewCondition"/>
+    {% if product.stock.track %}
+      <meta itemprop="availability" content="{% if product.stock.on_stock %}http://schema.org/InStock{% else %}http://schema.org/OutOfStock{% endif %}" />
+    {% endif %}
+      
+    <form action="{{ ('cart/add/' ~ product.vid) | url }}" id="product_configure_form" method="post">
+      {% if product.options or product.variants or product.custom %}
+      <div class="product-option row">
+       <div class="col-md-12">
+      {{ product | html_product_configure | raw }}
+               
+          
+          
+        </div>
+      </div>
+      {% else %}
+        <input type="hidden" name="bundle_id" id="product_configure_bundle_id" value="">
+      {% endif %}
+      <div class="product-price row">
+        <div class="price-wrap col-xs-5 col-md-5"> 
+          {% if product.price.price_old %}
+          <span class="old-price">{{ product.price.price_old | money }}{% if shop.settings.legal.mode == 'strict' %} {{ 'SRP' | t }}{% endif %}</span>
+          {% endif %}
+          <span class="price" style="line-height: 30px;">{{ product.price.price | money }}
+      {% if shop.settings.legal.mode == 'strict' %}
+        <br /><span style="font-size: 0.6em;">* {% if shop.b2b %}{{ 'Excl. VAT' | t }}{% else %}{{ 'Incl. VAT' | t }}{% endif %} {{ 'Excl. $1' | t('<a href="' ~ 'service/shipping-returns' | url ~ '"style="color: black;">' ~ 'Shipping costs' | t ~ '</a>') | raw }}</span> 
+      {% endif %} 
+ 
+        </div>
+        <div class="cart col-xs-7 col-md-7"> 
+          <div class="cart">
+            {% if product.stock.available %}
+            {#<input type="text" name="quantity" value="{{ product.quantity }}" />#}
+            {#<div class="change">#}
+            {#  <a href="javascript:;" onclick="updateQuantity('up');" class="up">+</a>#}
+            {#  <a href="javascript:;" onclick="updateQuantity('down');" class="down">-</a>#}
+            {#</div>#}
+            <a href="javascript:;" onclick="$('#product_configure_form').submit();" class="btn button--primary" title="{{ 'Add to cart' | t }}" {% if shop.language == 'de' %}style="padding: 0px 10px;"{% endif %}>
+              <span>{{ 'Add to cart' | t }}</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </form>   
+
+    <div class="product-tabs row">
+      <div class="tabs">
+        <ul>
+          <li class="active{% if not product.specs %} col-2{% endif %} information"><a rel="info" href="#">{{ 'Information' | t }}</a></li>
+          {% if product.specs %}<li class="specs"><a rel="specs" href="#">{{ 'Specifications' | t }}</a></li>{% endif %}
+        </ul>
+      </div>                    
+      <div class="tabsPages">
+        <div class="info active page{% if not product.specs %} no-tabs{% endif %}">
+          {% if product.code or product.stock.track and not product.stock.on_stock or product.stock.delivery or product.unit %}
+          <table class="details">
+            {% if product.code %}<meta itemprop="mpn" content="{{ product.code }}" />{% endif %}
+            {% if product.code %}
+            <tr class="articlenumber">
+              <td>{{ 'Article number' | t }}:</td>
+              <td>{{ product.code }}</td>
+            </tr>
+            {% endif %}
+ {% endif %}
+            {% if product.stock.track and not product.stock.on_stock %}
+            <tr class="availability">
+              <td>{{ 'Availability' | t }}:</td>
+              <td><span class="out-of-stock">{{ 'Out of stock' | t }}</span></td>
+            </tr>
+            {% endif %}
+            {% if product.stock.track and product.stock.on_stock %}
+            <tr class="availability">
+              <td>{{ 'Availability' | t }}:</td>
+              <td><span class="in-stock">{{ 'In stock' | t }}</span>
+                {% if theme.show_amount_of_products_on_productpage %}
+                ({{ product.stock.level }})
+                {% endif %}
+              </td>
+            </tr>
+            {% endif %}
+            {% if product.stock.delivery %}
+            <tr class="deliverytime">
+              <td>{{ 'Delivery time' | t }}:</td>
+              <td>{{ product.stock.delivery.title }}</td>
+            </tr>
+            {% endif %}
+            
+          </table>
+         
+          
+          {% if product.discounts or product.discount_rules %}
+            <ul>
+              {% if product.discounts %}
+                {% for discount in product.discounts %}
+                  <li>
+                    <strong>
+                      {{ 'Buy $1 for $2 each and save $3' | t (discount.quantity, discount.price | money, discount.percentage | percentage) }}
+                      {% if discount.unit and shop.settings.legal.mode == 'strict' %}
+                        ({{ discount.unit.price | money }} / {{ discount.unit.unit }})
+                      {% endif %}
+                    </strong>
+                  </li>
+                {% endfor %}
+              {% endif %}
+              
+              {% if product.discount_rules %}
+                {% for discount_rule in product.discount_rules %}
+                  <li>
+                    <strong>{{ discount_rule }}</strong>
+                  </li>
+                {% endfor %}
+              {% endif %}
+            </ul>
+          {% endif %}
+          <div class="clearfix"></div>
+          
+          {% if product.description %}
+          {{ product.description | raw }}
+          {% endif %}
+          
+          {% if product.content %}
+          <div class="product__content">
+            {{ product.content | raw }}
+          </div>
+          {% endif %}
+          
+          {% if not product.code and not product.stock.track and not product.stock.on_stock and not product.stock.delivery and not product.unit and not product.content %}          <em>{{ 'No information found' | t }}</em>
+          {% endif %}          
+        </div>
+        {% if product.specs %}
+        <div class="page specs">
+          <table>
+            {% for spec in product.specs %}
+            <tr>
+              <td class="spec-title"><strong>{{ spec.title }}:</strong></td>
+              <td>{{ spec.value }}</td>
+            </tr>
+            {% endfor %}
+          </table>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="product-actions row">
+  <div class="social-media col-xs-12 col-md-4">
+    {% if shop.settings.social.facebook %}                    
+    <div class="social-block social-block-facebook">
+      <div id="fb-root"></div>
+      <script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_GB/all.js#xfbml=1&appId=154005474684339";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+      <div class="fb-like" data-href="{{ product.url | url }}" data-send="false" data-layout="button_count" data-width="85" data-show-faces="false"></div>
+    </div>
+    {% endif %}
+    {% if shop.settings.social.google %}
+    <div class="social-block social-block-google">
+      <g:plusone size="medium"></g:plusone>
+      <script type="text/javascript">
+        (function() {
+          var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+          po.src = 'https://apis.google.com/js/plusone.js';
+          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+        })();
+      </script>
+    </div>
+    {% endif %}
+    {% if shop.settings.social.pinterest %}
+    <div class="social-block social-block-pinterest">
+      <a href="http://pinterest.com/pin/create/button/?url={{ product.url | url | url_encode }}&media={{ product.image | url_image('', product.fulltitle) | url_encode }}&description={{ product.fulltitle | url_encode }}" class="pin-it-button" count-layout="horizontal" target="_blank"><img border="0" src="{{ 'pinext.png' | url_asset }}" title="Pin It" /></a>
+      <script type="text/javascript" src="https://assets.pinterest.com/js/pinit.js"></script>
+    </div>
+    {% endif %}
+    {% if shop.settings.social.twitter %}
+    <div class="social-block social-block-twitter">
+      <a href="https://twitter.com/share" class="twitter-share-button" data-via="{{ shop.settings.social.twitter }}">Tweet</a>
+      <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+    </div>
+    {% endif %}
+    {% if shop.settings.social.addthis %}
+    <div class="social-block social-block-addthis">
+      <div class="addthis_toolbox addthis_default_style"><a class="addthis_button_compact"></a></div>
+      <script type="text/javascript">var addthis_config = {"data_track_clickback":true};</script>
+      <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid={{ shop.settings.social.addthis }}"></script>
+    </div>
+    {% endif %}    
+  </div>
+  <div class="col-md-7 col-md-offset-1 ">
+    <div class="tags-actions row">
+      <div class="tags col-md-4">
+        {% for tag in product.tags %}
+        <a href="{{ tag.url | url }}" title="{{ tag.title }}">{{ tag.title }}</a> {% if not loop.last %}/ {% endif %}
+        {% endfor %}
+        {% if product.brand %}
+        {% if product.tags %}/ {% endif %}
+        <a href="{{ product.brand.url | url }}" title="product.brand.title"><h2 itemprop="brand" content="{{ product.brand.title }}">{{ product.brand.title }}</h2></a>
+        {% endif %}
+      </div>
+      <div class="actions col-md-8 text-right">
+         <a href="{{ ('account/wishlistAdd/' ~ product.id ~ '?variant_id=' ~ product.vid) | url }}" title="{{ 'Add to wishlist' | t }}">{{  'Add to wishlist' | t }}</a> /  
+        <a href="{{ ('compare/add/' ~ product.vid) | url }}" title="{{ 'Add to compare' | t }}">
+          {{ 'Add to compare' | t }}
+        </a> / 
+        {% if page.compare %}
+        <a href="{{ 'compare' | url }}" title="{{ 'Compare products' | t }}">
+          <strong>{{ 'Compare products' | t }}</strong>
+        </a> /
+        {% endif %}
+        <a href="#" onclick="window.print(); return false;" title="{{ 'Print' | t }}">
+          {{ 'Print' | t }}
+        </a>
+      </div>      
+    </div>
+  </div>    
+</div>
+
+ {% if product.bundles %}
+  <div class="products hidden-xs bundle row">
+
+    <div class="col-md-12">
+      <h3 class="title">{{ 'Bundles' | t }}</h3>
+    </div>
+      {% include 'snippets/bundleproduct.rain' %}
+</div>
+    {% endif %}
+  
+  
+{% if product.related %}
+<div class="products  related row">
+  <div class="col-md-12">
+    <h3>{{ 'Related products' | t }}</h3>
+  </div>
+  {% for product in product.related %}
+  {% include 'snippets/products.rain' %}
+  {% endfor %}
+</div>                  
+{% endif %}
+</div>
+
+{% if shop.settings.legal.mode == 'strict' %}
+<div class="{% if product.related %}strict-shipping{% endif %} row">
+  <div class="col-md-12">
+    <small class="shipping-cost">
+      {{ 'Excl. $1' | t('<a href="' ~ 'service/shipping-returns' | url ~ '" target="_blank">' ~ 'Shipping costs' | t ~ '</a>') | raw }}
+    </small>
+  </div>
+</div>
+{% endif %}
+
+<script src="{{ 'lightbox.js' | url_asset }}" type="text/javascript"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+  $('.gallery').featherlightGallery({
+    gallery: {
+    	fadeIn: 300,
+    	fadeOut: 300
+    },
+    openSpeed:    300,
+    closeSpeed:   300
+  });
+});
+</script>
